@@ -35,35 +35,44 @@ export const getMe = createAsyncThunk("auth/getMe", async (_, { rejectWithValue 
   }
 });
 
-export const loginUser = createAsyncThunk("auth/loginUser", async (payload: { email: string; password: string }, { rejectWithValue }) => {
-  try {
-    const res = await baseApi.post("/auth/login", payload);
-    return res.data.data;
-  } catch (error: any) {
-    return rejectWithValue(error?.response?.data?.message || "Login failed");
+export const loginUser = createAsyncThunk(
+  "auth/loginUser",
+  async (payload: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const res = await baseApi.post("/auth/login", payload);
+      return res.data.data;
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data?.message || "Login failed");
+    }
   }
-});
+);
 
 export const registerUser = createAsyncThunk(
   "auth/registerUser",
-  async (payload: { fullName: string; email: string; phone?: string; password: string }, { rejectWithValue }) => {
+  async (
+    payload: { fullName: string; email: string; phone?: string; password: string },
+    { rejectWithValue }
+  ) => {
     try {
       const res = await baseApi.post("/users/register", payload);
       return res.data.data;
     } catch (error: any) {
       return rejectWithValue(error?.response?.data?.message || "Register failed");
     }
-  },
+  }
 );
 
-export const logoutUser = createAsyncThunk("auth/logoutUser", async (_, { rejectWithValue }) => {
-  try {
-    await baseApi.post("/auth/logout");
-    return true;
-  } catch (error: any) {
-    return rejectWithValue(error?.response?.data?.message || "Logout failed");
+export const logoutUser = createAsyncThunk(
+  "auth/logoutUser",
+  async (_, { rejectWithValue }) => {
+    try {
+      await baseApi.post("/auth/logout");
+      return true;
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data?.message || "Logout failed");
+    }
   }
-});
+);
 
 const authSlice = createSlice({
   name: "auth",
@@ -74,6 +83,7 @@ const authSlice = createSlice({
     },
     clearUser(state) {
       state.user = null;
+      state.token = null;
       state.status = "idle";
       state.error = null;
     },
@@ -85,7 +95,8 @@ const authSlice = createSlice({
       })
       .addCase(getMe.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.user = action.payload;
+        state.user = action.payload.user ?? action.payload;
+        state.token = action.payload.token ?? state.token;
       })
       .addCase(getMe.rejected, (state, action) => {
         state.status = "failed";
@@ -99,7 +110,8 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.user = action.payload;
+        state.user = action.payload.user ?? action.payload;
+        state.token = action.payload.token ?? state.token;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.status = "failed";
@@ -112,7 +124,8 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.user = action.payload;
+        state.user = action.payload.user ?? action.payload;
+        state.token = action.payload.token ?? state.token;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.status = "failed";
@@ -121,6 +134,7 @@ const authSlice = createSlice({
 
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
+        state.token = null;
         state.status = "idle";
       });
   },
